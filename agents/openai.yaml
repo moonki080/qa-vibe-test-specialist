@@ -1,0 +1,4 @@
+interface:
+  display_name: "QA Vibe Test Specialist"
+  short_description: "Iterative QA loops for AI-generated code"
+  default_prompt: "Use $qa-vibe-test-specialist to run tests, patch failures, add regression coverage, and repeat until the QA goal is met."
