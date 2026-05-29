@@ -40,8 +40,8 @@ Detection signals:
 Preferred command order:
 
 - Existing project command from docs/config if obvious.
-- `python -m pytest` when pytest is configured or tests are pytest-style.
-- `python -m unittest discover` for stdlib unittest projects.
+- Python test commands through the active interpreter, for example `python3 -m pytest` when pytest is configured or tests are pytest-style.
+- Python unittest discovery through the active interpreter, for example `python3 -m unittest discover` for stdlib unittest projects.
 
 ## Browser / UI Automation
 

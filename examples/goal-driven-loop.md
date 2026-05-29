@@ -5,7 +5,7 @@
 ## Iteration 1
 
 ```bash
-python scripts/qa_goal_loop.py /path/to/project \
+python3 scripts/qa_goal_loop.py /path/to/project \
   --goal "standard checks pass and high-risk findings are fixed" \
   --mode standard \
   --state /tmp/qa-goal-loop.json \

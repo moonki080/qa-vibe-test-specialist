@@ -47,8 +47,8 @@ Apply professional software testing discipline to fast AI-generated work without
 4. Execute or design checks.
    - Run existing test/lint/type/build commands when available and relevant.
    - When the target project is local and no explicit command is provided, consider:
-     - `python scripts/qa_test_runner.py /path/to/project --mode smoke`
-     - `python scripts/qa_test_runner.py /path/to/project --mode standard --json-out /tmp/qa-run.json --md-out /tmp/qa-run.md`
+     - `python3 scripts/qa_test_runner.py /path/to/project --mode smoke`
+     - `python3 scripts/qa_test_runner.py /path/to/project --mode standard --json-out /tmp/qa-run.json --md-out /tmp/qa-run.md`
    - Treat the runner as evidence capture, not as a replacement for engineering judgment. Inspect failures, logs, changed files, and relevant code before proposing fixes.
    - For code changes, add or modify focused tests when the user asked for implementation support or when the repo clearly expects tests.
    - After fixing the target project, rerun the narrow failing command first, then the broader suite or build command. Report before/after evidence.

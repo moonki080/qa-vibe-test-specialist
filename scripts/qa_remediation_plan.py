@@ -16,11 +16,18 @@ def load_report(path: Path) -> dict:
         raise SystemExit(f"Could not read runner report: {error}") from error
 
 
+def write_text_file(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
 def classify(result: dict) -> str:
     name = str(result.get("name", "")).lower()
     category = str(result.get("category", "")).lower()
     command = str(result.get("command", "")).lower()
 
+    if result.get("status") == "skipped-tool":
+        return "Missing local tool"
     if "lint" in category or "lint" in name or "lint" in command:
         return "Lint/style/static-analysis failure"
     if "type" in category or "typecheck" in name or "tsc" in command:
@@ -31,8 +38,6 @@ def classify(result: dict) -> str:
         return "UI/E2E workflow failure"
     if "security" in category or "audit" in command:
         return "Dependency/security advisory"
-    if result.get("status") == "skipped-tool":
-        return "Missing local tool"
     if result.get("status") == "timeout":
         return "Timeout or hanging test"
     return "Behavioral test failure"
@@ -128,7 +133,7 @@ def main() -> int:
     markdown = make_plan(report)
 
     if args.write:
-        Path(args.write).expanduser().write_text(markdown, encoding="utf-8")
+        write_text_file(Path(args.write).expanduser(), markdown)
     else:
         sys.stdout.write(markdown)
     return 0

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import os
 import shlex
@@ -19,6 +20,12 @@ from typing import Iterable
 FAST_NODE_SCRIPTS = ("check", "test", "lint", "typecheck", "build", "build:web", "test:unit")
 RELEASE_NODE_SCRIPTS = ("test:e2e", "e2e", "test:integration", "audit")
 TEXT_TAIL_LIMIT = 12000
+PYTHON_SYNTAX_CHECK = (
+    "import ast,pathlib,sys\n"
+    "for item in sys.argv[1:]:\n"
+    "    path = pathlib.Path(item)\n"
+    "    ast.parse(path.read_text(encoding='utf-8'), filename=str(path))\n"
+)
 
 
 @dataclass
@@ -68,6 +75,11 @@ def read_json(path: Path) -> dict:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {}
+
+
+def write_text_file(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
 
 
 def pick_node_runner(project: Path) -> str:
@@ -167,28 +179,65 @@ def detect_node(project: Path, mode: str, include_audit: bool) -> list[Candidate
     return candidates
 
 
+def tests_reference_pytest(tests_dir: Path) -> bool:
+    if not tests_dir.exists():
+        return False
+    for path in tests_dir.rglob("*.py"):
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"), filename=str(path))
+        except (OSError, SyntaxError):
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                if any(alias.name == "pytest" or alias.name.startswith("pytest.") for alias in node.names):
+                    return True
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                if module == "pytest" or module.startswith("pytest."):
+                    return True
+            elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "pytest":
+                return True
+    return False
+
+
 def detect_python(project: Path) -> list[Candidate]:
     signals = [
         project / "pyproject.toml",
         project / "pytest.ini",
         project / "tox.ini",
         project / "setup.cfg",
+        project / "requirements.txt",
+        project / "requirements-dev.txt",
     ]
     tests_dir = project / "tests"
-    has_python = any(path.exists() for path in signals) or tests_dir.exists()
+    python_scripts = sorted((project / "scripts").glob("*.py")) if (project / "scripts").exists() else []
+    has_python = any(path.exists() for path in signals) or tests_dir.exists() or bool(python_scripts)
     if not has_python:
         return []
 
     config_text = "\n".join(
         path.read_text(encoding="utf-8", errors="ignore") for path in signals if path.exists()
     )
-    candidates = []
-    if "pytest" in config_text.lower() or tests_dir.exists():
+    candidates: list[Candidate] = []
+
+    if python_scripts:
+        candidates.append(
+            Candidate(
+                name="python:syntax-scripts",
+                command=[sys.executable, "-c", PYTHON_SYNTAX_CHECK]
+                + [str(path.relative_to(project)) for path in python_scripts],
+                reason="Python scripts/*.py detected",
+                mode="smoke",
+                category="compile",
+            )
+        )
+
+    if "pytest" in config_text.lower() or tests_reference_pytest(tests_dir):
         candidates.append(
             Candidate(
                 name="python:pytest",
                 command=[sys.executable, "-m", "pytest"],
-                reason="Python tests or pytest configuration detected",
+                reason="pytest configuration or dependency detected",
                 mode="smoke",
                 category="test",
             )
@@ -197,7 +246,7 @@ def detect_python(project: Path) -> list[Candidate]:
         candidates.append(
             Candidate(
                 name="python:unittest",
-                command=[sys.executable, "-m", "unittest", "discover"],
+                command=[sys.executable, "-m", "unittest", "discover", "-s", "tests"],
                 reason="tests/ directory detected",
                 mode="smoke",
                 category="test",
@@ -370,7 +419,7 @@ def write_markdown(report: dict, path: Path) -> None:
             if item["stderr_tail"]:
                 lines.extend(["Stderr tail:", "", "```text", item["stderr_tail"].rstrip(), "```", ""])
 
-    path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    write_text_file(path, "\n".join(lines).rstrip() + "\n")
 
 
 def build_summary(results: list[Result]) -> dict:
@@ -400,16 +449,25 @@ def main() -> int:
         print(f"Project directory not found: {project}", file=sys.stderr)
         return 2
 
-    candidates = [
-        Candidate(
-            name=f"custom:{index + 1}",
-            command=shlex.split(command),
-            reason="explicit --command",
-            mode=args.mode,
-            category="custom",
+    candidates = []
+    for index, command in enumerate(args.command):
+        try:
+            command_parts = shlex.split(command)
+        except ValueError as error:
+            print(f"Invalid --command #{index + 1}: {error}", file=sys.stderr)
+            return 2
+        if not command_parts:
+            print(f"Invalid --command #{index + 1}: command must not be blank", file=sys.stderr)
+            return 2
+        candidates.append(
+            Candidate(
+                name=f"custom:{index + 1}",
+                command=command_parts,
+                reason="explicit --command",
+                mode=args.mode,
+                category="custom",
+            )
         )
-        for index, command in enumerate(args.command)
-    ]
     if not candidates:
         candidates = detect_candidates(project, args.mode, args.include_audit)
 
@@ -428,7 +486,7 @@ def main() -> int:
     print(output)
 
     if args.json_out:
-        Path(args.json_out).expanduser().write_text(output + "\n", encoding="utf-8")
+        write_text_file(Path(args.json_out).expanduser(), output + "\n")
     if args.md_out:
         write_markdown(report, Path(args.md_out).expanduser())
 

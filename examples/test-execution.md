@@ -5,7 +5,7 @@
 **Command:**
 
 ```bash
-python scripts/qa_test_runner.py /path/to/project --mode standard \
+python3 scripts/qa_test_runner.py /path/to/project --mode standard \
   --json-out /tmp/qa-run.json \
   --md-out /tmp/qa-run.md
 ```
@@ -21,7 +21,7 @@ python scripts/qa_test_runner.py /path/to/project --mode standard \
 **Remediation Step:**
 
 ```bash
-python scripts/qa_remediation_plan.py /tmp/qa-run.json --write /tmp/qa-remediation.md
+python3 scripts/qa_remediation_plan.py /tmp/qa-run.json --write /tmp/qa-remediation.md
 ```
 
 **Developer Loop:**

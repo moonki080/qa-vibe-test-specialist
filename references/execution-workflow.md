@@ -15,19 +15,19 @@ Use this reference when the user wants the skill to run tests against a local pr
 From this skill directory:
 
 ```bash
-python scripts/qa_test_runner.py /path/to/project --mode smoke
+python3 scripts/qa_test_runner.py /path/to/project --mode smoke
 ```
 
 Common options:
 
 ```bash
-python scripts/qa_test_runner.py /path/to/project --mode standard \
+python3 scripts/qa_test_runner.py /path/to/project --mode standard \
   --json-out /tmp/qa-run.json \
   --md-out /tmp/qa-run.md
 
-python scripts/qa_test_runner.py /path/to/project --command "npm test" --command "npm run build"
+python3 scripts/qa_test_runner.py /path/to/project --command "npm test" --command "npm run build"
 
-python scripts/qa_test_runner.py /path/to/project --dry-run
+python3 scripts/qa_test_runner.py /path/to/project --dry-run
 ```
 
 Mode guidance:
@@ -49,7 +49,7 @@ Mode guidance:
 Use the remediation helper after a runner JSON file exists:
 
 ```bash
-python scripts/qa_remediation_plan.py /tmp/qa-run.json --write /tmp/qa-remediation.md
+python3 scripts/qa_remediation_plan.py /tmp/qa-run.json --write /tmp/qa-remediation.md
 ```
 
 ## Evidence Tags

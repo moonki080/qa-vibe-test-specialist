@@ -46,7 +46,7 @@ Record the goal in the report. Do not claim completion from a single green comma
 Run one recorded iteration:
 
 ```bash
-python scripts/qa_goal_loop.py /path/to/project \
+python3 scripts/qa_goal_loop.py /path/to/project \
   --goal "standard tests and build pass with no high-risk QA findings" \
   --mode standard \
   --state /tmp/qa-goal-loop.json \
@@ -56,7 +56,7 @@ python scripts/qa_goal_loop.py /path/to/project \
 Use explicit commands for a precise goal:
 
 ```bash
-python scripts/qa_goal_loop.py /path/to/project \
+python3 scripts/qa_goal_loop.py /path/to/project \
   --goal "release candidate checks pass" \
   --command "npm test" \
   --command "npm run build" \
@@ -64,7 +64,7 @@ python scripts/qa_goal_loop.py /path/to/project \
   --max-iterations 8
 ```
 
-After patching the target project, rerun the same `qa_goal_loop.py` command. The state file accumulates iteration history.
+After patching the target project, rerun the same `qa_goal_loop.py` command. The state file accumulates iteration history only when the project, goal, mode, and explicit command list match the existing state.
 
 ## Exit Criteria
 

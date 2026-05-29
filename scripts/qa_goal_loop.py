@@ -25,6 +25,17 @@ def load_state(path: Path) -> dict:
         return {}
 
 
+def state_compatible(state: dict, project: Path, goal: str, mode: str, commands: list[str]) -> bool:
+    if not state:
+        return True
+    return (
+        state.get("project") == str(project)
+        and state.get("goal") == goal
+        and state.get("mode") == mode
+        and state.get("commands") == commands
+    )
+
+
 def write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -232,7 +243,10 @@ def main() -> int:
     evidence_dir.mkdir(parents=True, exist_ok=True)
 
     state = load_state(state_path)
-    iterations = state.get("iterations") if isinstance(state.get("iterations"), list) else []
+    if state_compatible(state, project, args.goal, args.mode, args.command):
+        iterations = state.get("iterations") if isinstance(state.get("iterations"), list) else []
+    else:
+        iterations = []
     next_iteration = len(iterations) + 1
     iteration_json = evidence_dir / f"iteration-{next_iteration:03d}.json"
     iteration_md = evidence_dir / f"iteration-{next_iteration:03d}.md"

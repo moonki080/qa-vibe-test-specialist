@@ -92,7 +92,7 @@ This is practical alignment, not an official certification, endorsement, or form
 
 ## Install
 
-Current Codex documentation lists the user skill location as `$HOME/.agents/skills`:
+One common local skill directory is `$HOME/.agents/skills`:
 
 ```bash
 mkdir -p ~/.agents/skills
@@ -109,21 +109,34 @@ Restart Codex after installing so the skill can be discovered.
 
 ## Run Tests Directly
 
-The skill includes helper scripts for deterministic evidence capture. They do not install dependencies or mutate the target project.
+The skill includes helper scripts for deterministic evidence capture. They do not install dependencies or intentionally modify target source files; invoked project test commands may still create normal local caches or artifacts.
 
 ```bash
 cd ~/.agents/skills/qa-vibe-test-specialist
-python scripts/qa_test_runner.py /path/to/project --mode smoke
+python3 scripts/qa_test_runner.py /path/to/project --mode smoke
 ```
 
 For a fuller pass:
 
 ```bash
-python scripts/qa_test_runner.py /path/to/project --mode standard \
+python3 scripts/qa_test_runner.py /path/to/project --mode standard \
   --json-out /tmp/qa-run.json \
   --md-out /tmp/qa-run.md
 
-python scripts/qa_remediation_plan.py /tmp/qa-run.json --write /tmp/qa-remediation.md
+python3 scripts/qa_remediation_plan.py /tmp/qa-run.json --write /tmp/qa-remediation.md
+```
+
+## Develop This Skill
+
+This repository uses Python standard-library `unittest` tests for its helper scripts, so contributors can validate the skill without installing third-party packages:
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/qa_test_runner.py . --mode smoke
+python3 scripts/qa_goal_loop.py . --mode smoke \
+  --state /tmp/qa-vibe-goal.json \
+  --md-out /tmp/qa-vibe-goal.md \
+  --evidence-dir /tmp/qa-vibe-goal-evidence
 ```
 
 ## Iterate Until The Goal Is Met
@@ -131,7 +144,7 @@ python scripts/qa_remediation_plan.py /tmp/qa-run.json --write /tmp/qa-remediati
 Use the goal-loop helper when you want the agent to keep improving a local project through repeated test-fix-retest cycles.
 
 ```bash
-python scripts/qa_goal_loop.py /path/to/project \
+python3 scripts/qa_goal_loop.py /path/to/project \
   --goal "standard checks pass and no high-risk QA findings remain" \
   --mode standard \
   --state /tmp/qa-goal-loop.json \
@@ -142,7 +155,7 @@ python scripts/qa_goal_loop.py /path/to/project \
 For precise release criteria, pass explicit commands:
 
 ```bash
-python scripts/qa_goal_loop.py /path/to/project \
+python3 scripts/qa_goal_loop.py /path/to/project \
   --goal "release candidate checks pass" \
   --command "npm test" \
   --command "npm run build" \
@@ -156,7 +169,7 @@ The runner detects common repository-native commands such as:
 
 - `npm run check`, `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`
 - `pnpm`, `yarn`, and `bun` script variants
-- `python -m pytest` and `python -m unittest discover`
+- Python test commands through the active interpreter, such as `python3 -m pytest` and `python3 -m unittest discover`
 - `go test ./...`, `cargo test`, `dotnet test`, `mvn test`, Gradle tests
 - Playwright/Cypress release checks when config files exist and `--mode release` is used
 
@@ -208,6 +221,10 @@ qa-vibe-test-specialist/
 │   ├── qa_goal_loop.py
 │   ├── qa_remediation_plan.py
 │   └── qa_test_runner.py
+├── tests/
+│   ├── test_qa_goal_loop.py
+│   ├── test_qa_remediation_plan.py
+│   └── test_qa_test_runner.py
 ├── assets/
 │   └── templates/
 │       ├── defect-report.md
