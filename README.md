@@ -35,6 +35,7 @@ This skill turns "please test this" into a structured QA pass that tells you wha
 - Severity-ranked defect reports with evidence and reproduction steps.
 - A remediation loop that turns failing commands into targeted code/test fixes.
 - A goal-driven test-fix-retest loop that keeps improving the target project until exit criteria are met.
+- A one-shot QA pipeline that creates execution evidence, a remediation plan, and a Korean signoff draft.
 - A final QA signoff with commands run, coverage gaps, residual risk, and go/no-go recommendation.
 
 ## Copy-Paste Prompts
@@ -65,6 +66,10 @@ $qa-vibe-test-specialist Run the available tests in this local project, capture 
 
 ```text
 $qa-vibe-test-specialist Keep testing, fixing, adding regression coverage, and retesting this project until standard checks pass and no high-risk QA findings remain.
+```
+
+```text
+$qa-vibe-test-specialist Run qa-auto-run on this project. Use .qa-rules.md if present, keep the remediation loop to max 3 iterations, use plan-first mode for business-sensitive changes, and finish with a Korean QA signoff.
 ```
 
 ## Example Outputs
@@ -125,6 +130,17 @@ python3 scripts/qa_test_runner.py /path/to/project --mode standard \
 
 python3 scripts/qa_remediation_plan.py /tmp/qa-run.json --write /tmp/qa-remediation.md
 ```
+
+For a one-shot evidence pipeline and Korean signoff draft:
+
+```bash
+python3 scripts/qa_pipeline.py /path/to/project \
+  --mode standard \
+  --max-iterations 3 \
+  --out-dir /tmp/qa-vibe-pipeline
+```
+
+Add `.qa-rules.md` to the target project root when business rules, permissions, external systems, or protected files matter. The pipeline will report missing rules as residual risk for business-sensitive work.
 
 ## Develop This Skill
 
@@ -200,6 +216,7 @@ After failures, the remediation workflow is:
 - `test-execution`: direct command discovery/execution evidence and remediation plan.
 - `remediation-loop`: reproduce, fix, add regression coverage, rerun, and sign off.
 - `goal-driven-qa-loop`: repeat test execution, targeted fixes, regression tests, and retesting until explicit exit criteria are met.
+- `qa-auto-run`: one-shot diagnosis, bounded remediation, retest, and Korean signoff with `.qa-rules.md` context and safety stop conditions.
 - `release-signoff`: standards-aligned QA summary with traceability and go/no-go recommendation.
 
 ## What's Inside
@@ -219,19 +236,23 @@ qa-vibe-test-specialist/
 │   └── tooling-setup.md
 ├── scripts/
 │   ├── qa_goal_loop.py
+│   ├── qa_pipeline.py
 │   ├── qa_remediation_plan.py
 │   └── qa_test_runner.py
 ├── tests/
 │   ├── test_qa_goal_loop.py
+│   ├── test_qa_pipeline.py
 │   ├── test_qa_remediation_plan.py
 │   └── test_qa_test_runner.py
 ├── assets/
 │   └── templates/
 │       ├── defect-report.md
 │       ├── ko-defect-report.md
+│       ├── ko-qa-auto-signoff.md
 │       ├── ko-qa-iteration-log.md
 │       ├── ko-qa-signoff.md
 │       ├── ko-quick-test-plan.md
+│       ├── qa-rules.md
 │       ├── qa-iteration-log.md
 │       ├── qa-signoff.md
 │       └── quick-test-plan.md

@@ -30,6 +30,15 @@ python3 scripts/qa_test_runner.py /path/to/project --command "npm test" --comman
 python3 scripts/qa_test_runner.py /path/to/project --dry-run
 ```
 
+One-shot evidence pipeline:
+
+```bash
+python3 scripts/qa_pipeline.py /path/to/project \
+  --mode standard \
+  --max-iterations 3 \
+  --out-dir /tmp/qa-vibe-pipeline
+```
+
 Mode guidance:
 
 - `smoke`: fast compile/import/test/build confidence. Avoid slow E2E by default.

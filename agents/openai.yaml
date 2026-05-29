@@ -1,4 +1,4 @@
 interface:
   display_name: "QA Vibe Test Specialist"
-  short_description: "Iterative QA loops for AI-generated code"
-  default_prompt: "Use $qa-vibe-test-specialist to run tests, patch failures, add regression coverage, and repeat until the QA goal is met."
+  short_description: "Bounded QA automation for AI-generated code"
+  default_prompt: "Use $qa-vibe-test-specialist to run qa-auto-run with .qa-rules.md context, max 3 remediation iterations, regression checks, and a Korean QA signoff."
